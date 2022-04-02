@@ -1,0 +1,11 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Cardo&family=Caveat&family=JetBrains+Mono:wght@100&family=Lora:ital,wght@1,700&family=Merriweather&family=Orbitron:wght@500&family=Space+Grotesk:wght@300&family=Work+Sans:wght@300&display=swap');
+
+.App {
+  min-height: 100vh;
+  display: flex;
+  background-image: url(https://media.npr.org/assets/img/2021/10/15/squidgame_season1_episode1_00_44_44_16_wide-337c0ae67e61928e1963c289ccc59e92378e49eb-s1200-c85.webp);
+  background-size: cover;
+  background-position: center;
+  color: black;
+}
