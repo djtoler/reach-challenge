@@ -4,45 +4,26 @@ import {Input} from '@chakra-ui/input';
 import {VStack} from '@chakra-ui/layout';
 import React, { useState} from 'react';
 import { useToast } from '@chakra-ui/react';
+import { HintData } from "./HintData";
 
 
 const GameFormEasy = (props) => {
     console.log(props.numbers);
     let serverData = props.numbers
-    // Set useState hooks for form fields
     const [userInputNumber, setUserInputNumber] = useState();
     const [guessAttemptCounter, setGuessAttemptCounter] = useState(0);
-    const [loading, setLoading] = useState(false);
-    const [guessArray, setGuessArray] = useState([]);           
+    const [guessArray, setGuessArray] = useState([]); 
+    const [loading, setLoading] = useState(false);  
+    const [hintIndex, setHintIndex] = useState(0);
+    const [showHint, setShowHint] = useState(false);       
 
     // toast for error message objects
     const toast = useToast();
 
-    const guessCounter = () => {
-        setGuessAttemptCounter(guessAttemptCounter + 1 );
-        if(guessAttemptCounter === 10) {
-            window.location.reload();
-        }
-    };
-
-
-    const  corrcetNumberFeedback= {
-        1: "You guessed 1 correct number",
-        2: "You guessed 2 correct numbers",
-        3: "You guessed 3 correct numbers",
-        4: "You guessed 4 correct numbers",
-        5: "You guessed 0 correct numbers"
-    }
-    const locationFeedback = {
-        1: "You guessed 1 correct number with the correct location",
-        2: "You guessed 2 correct numbers with the correct location",
-        3: "You guessed 3 correct numbers with the correct location",
-        4: "Your guess was incorrect"
-    }
-
-    
     const submitHandler = () => {
         setLoading(true);
+
+        // if user tries to input w/out entering # or less than 4 digits
         if (!userInputNumber || userInputNumber.length < 4) {
             toast({
                 title: "Please Enter A 4-Digit Number The Field Before Clicking Submit",
@@ -54,72 +35,93 @@ const GameFormEasy = (props) => {
             setLoading(false);
             return;
         }
+        // if user guess all 4 numbers in correct locations
         if(userInputNumber.toString() === props.numbers) {
             console.log("yes");
             setLoading(false);
         }
         else {
+            // track # of guesses & limit # of guess attempts to 10
             guessCounter();
-            let correctLocationCountIndex = 0;
-            let correctNumbersCountIndex = 0;
 
-            for (let i = 0; i < userInputNumber.length; i++) {
-                if(userInputNumber.toString().charAt(i) === serverData.charAt(i)) {
-                    console.log(userInputNumber.toString().charAt(i) +"---"+ serverData.charAt(i));
-                    correctLocationCountIndex++
-                } 
-            }
+            // track # of correct numbers & locations that a user inputs, 
+            // track # of correct numbers that a user inputs
+            // counter stays at zero if nothing about input is correct
+            let correctLocationCount = 0;
+            let correctNumbersCount = 0;
 
             for (let i = 0; i < serverData.length; i++) {
+                // evaluate for correct numbers only
                 if (
                     serverData.charAt(i) === userInputNumber.charAt(0).toString() ||
                     serverData.charAt(i) === userInputNumber.charAt(1).toString() ||
                     serverData.charAt(i) === userInputNumber.charAt(2).toString() ||
                     serverData.charAt(i) === userInputNumber.charAt(3).toString() 
                 ) {
-                    console.log(userInputNumber.toString().charAt(i) +"---"+ serverData.charAt(i));
-                    correctNumbersCountIndex++
+                    correctNumbersCount++
                 }
+                // evaluate for correct number with correct location
+                if(userInputNumber.toString().charAt(i) === serverData.charAt(i)) {
+                    correctLocationCount++
+                } 
             }
 
-            for (let i = 0; i < serverData.length; i++) {
-                if (
-                    serverData.charAt(i) !== userInputNumber.charAt(0).toString() ||
-                    serverData.charAt(i) !== userInputNumber.charAt(1).toString() ||
-                    serverData.charAt(i) !== userInputNumber.charAt(2).toString() ||
-                    serverData.charAt(i) !== userInputNumber.charAt(3).toString() 
-                ) {
-                    correctLocationCountIndex = 4;
-                    correctNumbersCountIndex = 5;
-                }
-            }
-            
-
+            // update array state to store users guess, # of guesses, # of correct locations 
+            // & number of correct numbers
             setGuessArray(guessArray => [...guessArray, 
                 {
                     userInputNumberData: 
                         {
                             userGuess: userInputNumber,
                             guessNumberCount: guessAttemptCounter + 1,
-                            correctLocations: locationFeedback[correctLocationCountIndex],
-                            correctNumbers: corrcetNumberFeedback[correctNumbersCountIndex]
+                            correctLocations: correctLocationCount,
+                            correctNumbers: correctNumbersCount
                         }
-                        
                 }
             ]);
             setLoading(false);
-            return guessArray
+            // clear user input field
+            setUserInputNumber("");
         }
     }
 
+    // display updated state of guessArray, give feedback message about guesses
     const renderGuesses = () => {
         {guessArray.map((guessData, i) => {
             console.log(guessArray);
-            // console.log(guessData.userInputNumber.guessNumber);
+            for(let i=0; i<guessArray.length; i++) {
+                console.log(`You guessed ${guessArray[i].userInputNumberData.correctNumbers} correct numbers`);
+                console.log(`You guessed ${guessArray[i].userInputNumberData.correctLocations} correct locations`);
+            }
             return <div className="guessArray"> (<div key={i}> {guessData} </div>)</div>
         })};
     }
     renderGuesses();
+
+    // display hints that correspond to the random number from the API. 
+    const displayHint = () => {
+        setShowHint(true)
+        // generator a random number to use as hint array index so same hints arent used every time
+        setHintIndex(Math.floor(Math.random() * 4));
+        let serverDataArray = [...serverData];
+        console.log(serverDataArray);
+        for (let i=0; i<serverDataArray.length; i++) {
+            if (serverDataArray[i] == HintData[serverDataArray[i]].number) {
+                console.log(HintData[serverDataArray[i]].hints[hintIndex].hint);
+                console.log(HintData[serverDataArray[i]].hints[hintIndex].image);
+            } 
+        }
+    }
+
+    // function that tracks number of gues attempts, limits to 10 & restarts game after reaching limit
+    const guessCounter = () => {
+        setGuessAttemptCounter(guessAttemptCounter + 1 );
+        console.log("GUESS ATTEMPT COUNTER: " + guessAttemptCounter);
+        if(guessAttemptCounter === 10) {
+            window.location.reload();
+        }
+    };
+    
    
      return (
        <VStack spacing="5px" color="black">
@@ -134,6 +136,16 @@ const GameFormEasy = (props) => {
                onChange={(e)=>setUserInputNumber(e.target.value)} //Set number to whats entered in number field
                />
            </FormControl>
+
+           <Button 
+               colorScheme="green"
+               width="20%"
+               style={{marginTop: 15}}
+               onClick={displayHint}
+               isLoading={loading}
+           >
+               Hint
+           </Button>
 
            <Button 
                colorScheme="green"
