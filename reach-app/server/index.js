@@ -3,7 +3,7 @@ const app = express();
 const http = require("http");
 const cors = require("cors");
 const { Server } = require("socket.io");
-const counter = require ("./routes/counter");
+
 app.use(cors());
 app.use(express.json());
 
@@ -32,17 +32,21 @@ io.on("connection", (socket) => {
     serverCounter++
     socket.to(data.room).emit("receive_message", data);
     console.log(serverCounter);
-    if (serverCounter == 3) {
-      socket.to(data.room).emit("receive_message", data);
+    if (serverCounter == 10) {
+      console.log("gameOver");
     }
   });
+
+  // socket.on("game_over", (string) => {
+  //   console.log(string);
+  // })
 
   socket.on("disconnect", () => {
     console.log("User Disconnected", socket.id);
   });
 });
 
-app.use("/", counter)
+
 // app.get("/counter", async (req, res) => {
 //   try {
 //     const {serverCounter} = req.body

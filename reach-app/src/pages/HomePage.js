@@ -34,7 +34,8 @@ const HomePage = () => {
    
     return (
       <Container maxWidth="xl" centerContent>
-          <UserData/>
+          
+          
           <Box
           d="flex"
           justifyContent="center"
@@ -67,6 +68,7 @@ const HomePage = () => {
                     </TabPanels>
                 </Tabs>
             </Box>
+            
         </Container>
     )
   }

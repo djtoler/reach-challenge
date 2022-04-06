@@ -19,8 +19,10 @@ const Chat = ({ socket, username, room }) => {
   const [guessAttemptCounter2, setGuessAttemptCounter2] = useState(0);   
   const [guessArray, setGuessArray] = useState([]); 
   const [hintIndex, setHintIndex] = useState(0);
-  const [showHint, setShowHint] = useState(false);    
+  const [showHint, setShowHint] = useState(false);
+  const [guessesLeft, setGuessesLeft] = useState(true);    
   let toast = useToast();
+  let gameOverCounter = 0;
 
   useEffect(() => {
     socket.on("receive_message", (data) => {
@@ -54,6 +56,7 @@ const Chat = ({ socket, username, room }) => {
 
   
   const sendMessage = async () => {
+    gameOverCounter++
     if (userInputNumber !== "") {
       const messageData = {
         guessesInfo: guessArray,
@@ -70,12 +73,7 @@ const Chat = ({ socket, username, room }) => {
       setUserInputNumber("");
     }
 
-    const gameOver = async () => {
-      if (guessAttemptCounter == 2) {
-        let over = "game over"
-        await socket.emit("game_over", over)
-      }
-    }
+
 
     if (!userInputNumber || userInputNumber.length < 4) {
       toast({
@@ -140,65 +138,34 @@ const Chat = ({ socket, username, room }) => {
   // display updated state of guessArray, give feedback message about guesses
   const renderGuesses = () => {
     {guessArray.map((guessData, i) => {
-      console.log(guessArray);
+      
       for(let i=0; i<guessArray.length; i++) {
-        console.log(`You guessed ${guessArray[i].userInputNumberData.correctNumbers} correct numbers`);
-        console.log(`You guessed ${guessArray[i].userInputNumberData.correctLocations} correct locations`);
       }
       return <div className="guess-content"> (<div key={i}> {guessData} </div>)</div>
       })};
   }
   renderGuesses();
 
-  // display hints that correspond to the random number from the API. 
-  const displayHint = () => {
-      setShowHint(true)
-      setHintIndex(Math.floor(Math.random() * 4));
-      let serverNumsArray = [...serverNums];
-      console.log(serverNumsArray);
-      for (let i=0; i<serverNumsArray.length; i++) {
-          if (serverNumsArray[i] == HintData[serverNumsArray[i]].number) {
-              console.log(HintData[serverNumsArray[i]].hints[hintIndex].hint);
-              console.log(HintData[serverNumsArray[i]].hints[hintIndex].image);
-          } 
-      }
-  }
+ 
+
 
   const guessCounter = async () => {
     setGuessAttemptCounter(guessAttemptCounter + 1 );
-    let url = "http://localhost:3001/counter";
-    let counter2 = 0
     console.log("GUESS ATTEMPT COUNTER: " + guessAttemptCounter);
-    try {
-    //   axios({
-    //     method: "post",
-    //     url: "http://localhost:3001/counter",
-    //     data: {
-    //       count: counter2++
-    //     }
-    //   })
-    // }
-     await axios.post(url, {
-        count:counter2++
+    if (guessAttemptCounter === 2) {
+      setGuessesLeft(false)
+      socket.emit("game_over", (string) => {
+        console.log("in emit");
+        console.log(string);
       })
-      .then( (response) => {
-        console.log(response);
-        console.log(counter2);
-        console.log("added 1 to counter");
-      })
+      setTimeout(window.location.reload.bind(window.location),10000);
     }
-    catch (err) {
-      if (err) {
-        console.log("didnt count");
-      }
-    }
-
-    if (guessAttemptCounter === 10) {
-        window.location.reload();
-    }
-  };
+  }
+  
 
   return (
+    !guessesLeft ? <div className="out-of-guesses"> {"You've Reached Your Guess Limit, Please Try Again"}</div> :
+    
     <div className="chat-window">
       <div className="chat-header">
         <p>Live Chat</p>
@@ -213,19 +180,17 @@ const Chat = ({ socket, username, room }) => {
               >
                 <div>
                   <div className="message-content">
-                    <p>{messageContent.message}</p>
+                    <p>Number You Guessed: {messageContent.message}</p>
                   </div>
 
                   <div>
-                  {guessArray.map((guessData, i) => {
-                    console.log(guessArray);
-                    for(let i=0; i<guessArray.length; i++) {
-                      return <div className="guessArray"> (<div key={i}> {guessData.userInputNumberData.correctNumbers} </div>)</div>
-                    }
-                    
-        })};
-                        
-                      
+                    {guessArray.map((guessData, i) => {
+                      if( i+1 != guessArray.length) {return null}
+                      return <div key={i}> 
+                            Guess Attempt: {guessData.userInputNumberData.guessNumberCount}<br/>
+                            You guessed {guessData.userInputNumberData.correctNumbers} correct numbers and {guessData.userInputNumberData.correctLocations} correct locations
+                            <br/>
+                          </div>})} 
                   </div>
                   <div className="message-meta">
                     <p id="time">{messageContent.time}</p>

@@ -5,6 +5,11 @@ import {VStack} from '@chakra-ui/layout';
 import React, { useState} from 'react';
 import { useToast } from '@chakra-ui/react';
 import { HintData } from "./HintData";
+import HintDisplay from "./HintDisplay";
+import UserData from "./UserData";
+import { Badge, Avatar, Box, Text, Flex } from '@chakra-ui/react';
+import { render } from "@testing-library/react";
+
 
 
 const GameFormEasy = (props) => {
@@ -12,10 +17,15 @@ const GameFormEasy = (props) => {
     let serverData = props.numbers
     const [userInputNumber, setUserInputNumber] = useState();
     const [guessAttemptCounter, setGuessAttemptCounter] = useState(0);
+    const [guessAttemptCounter2, setGuessAttemptCounter2] = useState(10);
     const [guessArray, setGuessArray] = useState([]); 
     const [loading, setLoading] = useState(false);  
-    const [hintIndex, setHintIndex] = useState(0);
-    const [showHint, setShowHint] = useState(false);       
+    const [showHistory, setShowHistory] = useState(() => () => console.log("hi"));
+    const [historyArray, setHistoryArray] = useState([]);
+    const [correctLocationCount, setCorrectLocationCount] = useState()
+    const [correctNumbersCount, setCorrectNumbersCount] = useState()
+    // const [hintIndex, setHintIndex] = useState(0);
+    // const [showHint, setShowHint] = useState(false);       
 
     // toast for error message objects
     const toast = useToast();
@@ -80,85 +90,83 @@ const GameFormEasy = (props) => {
                 }
             ]);
             setLoading(false);
-            // clear user input field
             setUserInputNumber("");
         }
     }
 
-    // display updated state of guessArray, give feedback message about guesses
-    const renderGuesses = () => {
-        {guessArray.map((guessData, i) => {
-            console.log(guessArray);
-            for(let i=0; i<guessArray.length; i++) {
-                console.log(`You guessed ${guessArray[i].userInputNumberData.correctNumbers} correct numbers`);
-                console.log(`You guessed ${guessArray[i].userInputNumberData.correctLocations} correct locations`);
-            }
-            return <div className="guessArray"> (<div key={i}> {guessData} </div>)</div>
-        })};
-    }
-    renderGuesses();
-
-    // display hints that correspond to the random number from the API. 
-    const displayHint = () => {
-        setShowHint(true)
-        // generator a random number to use as hint array index so same hints arent used every time
-        setHintIndex(Math.floor(Math.random() * 4));
-        let serverDataArray = [...serverData];
-        console.log(serverDataArray);
-        for (let i=0; i<serverDataArray.length; i++) {
-            if (serverDataArray[i] == HintData[serverDataArray[i]].number) {
-                console.log(HintData[serverDataArray[i]].hints[hintIndex].hint);
-                console.log(HintData[serverDataArray[i]].hints[hintIndex].image);
-            } 
+   // display updated state of guessArray, give feedback message about guesses
+   const renderGuesses = () => {
+    {guessArray.map((guessData, i) => {
+        console.log(guessArray);
+        for(let i=0; i<guessArray.length; i++) {
+            console.log(`You guessed ${guessArray[i].userInputNumberData.correctNumbers} correct numbers`);
+            console.log(`You guessed ${guessArray[i].userInputNumberData.correctLocations} correct locations`);
+            return <div className="guessArray"> (<div key={i}> {guessData.userInputNumberData.correctNumbers} </div>)</div>
         }
-    }
+        
+    })};
+}
+renderGuesses();
 
     // function that tracks number of gues attempts, limits to 10 & restarts game after reaching limit
     const guessCounter = () => {
-        setGuessAttemptCounter(guessAttemptCounter + 1 );
-        console.log("GUESS ATTEMPT COUNTER: " + guessAttemptCounter);
-        if(guessAttemptCounter === 10) {
+        setGuessAttemptCounter2(guessAttemptCounter2 - 1 );
+        if(guessAttemptCounter2 === 0) {
             window.location.reload();
         }
     };
     
    
-     return (
-       <VStack spacing="5px" color="black">
+    return (
+        <VStack spacing="5px" color="black">
+             {/* <UserData counter={guessAttemptCounter2} /> */}
+             <FormControl className="intInput" isRequired>
+                <FormLabel>4-Digit Number</FormLabel>
+                <Input
+                placeholder='Enter a 4-Digit Number'
+                maxlength = "4"
+                minlength = "4"
+                value={userInputNumber}
+                onChange={(e)=>setUserInputNumber(e.target.value)} //Set number to whats entered in number field
+                />
+             </FormControl>
+ 
+             <HintDisplay serverData={serverData}/>
+ 
+             <Button 
+                colorScheme="green"
+                width="100%"
+                style={{marginTop: 15}}
+                onClick={submitHandler}
+                isLoading={loading}
+             >
+                Submit Your Numbers
+             </Button>
+             <Button
+                 colorScheme="green"
+                 width="100%"
+                 style={{ marginTop: 15 }}
+                 // onClick={() => {
+                 //     setShowHistory(renderGuesses)
+                 // }}
+                 >
+                 History
+             </Button> 
 
-           <FormControl className="intInput" isRequired>
-               <FormLabel>4-Digit Number</FormLabel>
-               <Input
-               placeholder='Enter a 4-Digit Number'
-               maxlength = "4"
-               minlength = "4"
-               value={userInputNumber}
-               onChange={(e)=>setUserInputNumber(e.target.value)} //Set number to whats entered in number field
-               />
-           </FormControl>
-
-           <Button 
-               colorScheme="green"
-               width="20%"
-               style={{marginTop: 15}}
-               onClick={displayHint}
-               isLoading={loading}
-           >
-               Hint
-           </Button>
-
-           <Button 
-               colorScheme="green"
-               width="100%"
-               style={{marginTop: 15}}
-               onClick={submitHandler}
-               isLoading={loading}
-           >
-               Submit Your Numbers
-           </Button>
-       </VStack>
+            <div>
+                {guessArray.map((guessData, i) => {
+                    console.log(guessArray);
+                    return <div key={i}> 
+                        Guess Attempt: {guessData.userInputNumberData.guessNumberCount}<br/> Number You Guessed: {guessData.userInputNumberData.userGuess}
+                        <br/>
+                        You guessed {guessData.userInputNumberData.correctNumbers} correct numbers and {guessData.userInputNumberData.correctLocations} correct locations
+                        <br/>
+                        </div>
+                })}
+            </div>
+        </VStack>
     )
-   
-}
+    
+ }
 
 export default GameFormEasy;
