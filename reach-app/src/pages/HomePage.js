@@ -1,14 +1,24 @@
 import React, { useState, useEffect } from 'react';
+import { Button } from "@chakra-ui/button";
 import { useToast } from '@chakra-ui/react';
 import axios from "axios";
 import {Container, Box, Text, Tab, TabList, TabPanel, TabPanels, Tabs} from '@chakra-ui/react';
 import GameFormEasy from '../components/GameFormEasy';
 import GameFormDifficult from '../components/GameFormDifficult';
-import UserData from '../components/UserData';
+import '../components/HomePage.css';
+import { useHistory } from 'react-router';
 
-const HomePage = () => {
+const HomePage = (props) => {
     const [serverNums, setServerNums] = useState();
+    const [loggedIn, setLoggedIn] = useState(false);
+    const [loading, setLoading] = useState()  
     let toast = useToast();
+    const history = useHistory();
+
+    const submitHandler =  () => {
+        history.push('/')
+    }
+
     useEffect(()=> {
         try {
             const fetchData = async() => {
@@ -33,9 +43,20 @@ const HomePage = () => {
     }, []); 
    
     return (
-      <Container maxWidth="xl" centerContent>
-          
-          
+        loggedIn ? 
+        <div className="notLoggedIn"> 
+            {"You Must Be Logged In To Play This Game"}
+            <Button 
+            colorScheme = "blue"
+            width = "100%"
+            style = {{marginTop: 15}}
+            onClick = {submitHandler}
+            isLoading = {loading}
+        >
+            Click Here To Login Or Register
+        </Button>
+        </div> :
+        <Container maxWidth="xl" centerContent>
           <Box
           d="flex"
           justifyContent="center"

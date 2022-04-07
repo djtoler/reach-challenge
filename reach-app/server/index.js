@@ -1,11 +1,29 @@
 const express = require("express");
+const dotenv = require("dotenv");
+const connectDB = require('./configs/database');
 const app = express();
 const http = require("http");
 const cors = require("cors");
+const bodyParser = require('body-parser')
 const { Server } = require("socket.io");
+const users = require('./routes/users');
+const {notFound, errorHandler} = require('./middleware/middleware');
 
+dotenv.config();
+connectDB();
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: false}))
 app.use(cors());
 app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.send("endpoint is working!")
+})
+
+app.use('/user', users);
+
+app.use(notFound)
+app.use(errorHandler)
 
 const server = http.createServer(app);
 
@@ -19,7 +37,8 @@ const io = new Server(server, {
 let serverCounter;
 
 io.on("connection", (socket) => {
-  console.log(`User Connected: ${socket.id}`);
+
+    console.log(`User Connected: ${socket.id}`);
 
   socket.on("join_room", (data) => {
     serverCounter = 0;
@@ -46,22 +65,8 @@ io.on("connection", (socket) => {
   });
 });
 
+server.listen(
+  3001,
+  console.log(`Server running on PORT 3001`)
+);
 
-// app.get("/counter", async (req, res) => {
-//   try {
-//     const {serverCounter} = req.body
-//     console.log(serverCounter);
-//     console.log("counting on server");
-//     res
-//     .status(200)
-//     .json({"counter":serverCounter})
-//   }
-//   catch (err) {
-//     console.log("didnt count");
-//     res.status(500).json({message: "Internal Server Error"})
-//   }
-// })
-
-server.listen(3001, () => {
-  console.log("SERVER RUNNING");
-});

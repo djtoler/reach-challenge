@@ -7,6 +7,7 @@ import {VStack} from '@chakra-ui/layout';
 import { useToast } from '@chakra-ui/react';
 import { HintData } from "./HintData";
 import axios from "axios";
+const BACKEND = "http://localhost:3002/game/data";
 
 
 const Chat = ({ socket, username, room }) => {
@@ -23,6 +24,8 @@ const Chat = ({ socket, username, room }) => {
   const [guessesLeft, setGuessesLeft] = useState(true);    
   let toast = useToast();
   let gameOverCounter = 0;
+  let totalLocationCount;
+  let totalNumbersCount;
 
   useEffect(() => {
     socket.on("receive_message", (data) => {
@@ -71,6 +74,7 @@ const Chat = ({ socket, username, room }) => {
       await socket.emit("send_message", messageData);
       setMessageList((list) => [...list, messageData]);
       setUserInputNumber("");
+
     }
 
 
@@ -90,6 +94,8 @@ const Chat = ({ socket, username, room }) => {
     if(userInputNumber.toString() === serverNums) {
       console.log("yes");
       setLoading(false);
+      console.log(totalLocationCount);
+      console.log(totalLocationCount);
     }
     else {
       // track # of guesses & limit # of guess attempts to 10
@@ -100,6 +106,8 @@ const Chat = ({ socket, username, room }) => {
       // counter stays at zero if nothing about input is correct
       let correctLocationCount = 0;
       let correctNumbersCount = 0;
+       totalNumbersCount = 0;
+       totalLocationCount = 0;
 
       for (let i = 0; i < serverNums.length; i++) {
         if (
@@ -123,7 +131,9 @@ const Chat = ({ socket, username, room }) => {
                 userGuess: userInputNumber,
                 guessNumberCount: guessAttemptCounter + 1,
                 correctLocations: correctLocationCount,
-                correctNumbers: correctNumbersCount
+                correctNumbers: correctNumbersCount,
+                totalNums : totalNumbersCount+correctNumbersCount,
+                totalLocs: totalLocationCount+ correctLocationCount
               }
           }
         ]);
@@ -146,25 +156,19 @@ const Chat = ({ socket, username, room }) => {
   }
   renderGuesses();
 
- 
-
 
   const guessCounter = async () => {
     setGuessAttemptCounter(guessAttemptCounter + 1 );
     console.log("GUESS ATTEMPT COUNTER: " + guessAttemptCounter);
-    if (guessAttemptCounter === 2) {
+    if (guessAttemptCounter === 10) {
       setGuessesLeft(false)
-      socket.emit("game_over", (string) => {
-        console.log("in emit");
-        console.log(string);
-      })
       setTimeout(window.location.reload.bind(window.location),10000);
     }
   }
   
 
   return (
-    !guessesLeft ? <div className="out-of-guesses"> {"You've Reached Your Guess Limit, Please Try Again"}</div> :
+    !guessesLeft ? <div className="out-of-guesses"> {"You've Reached Your Guess Limit, "}</div> :
     
     <div className="chat-window">
       <div className="chat-header">
@@ -185,8 +189,10 @@ const Chat = ({ socket, username, room }) => {
 
                   <div>
                     {guessArray.map((guessData, i) => {
-                      if( i+1 != guessArray.length) {return null}
+                      if( i+1 != guessArray.length) { return null}
                       return <div key={i}> 
+                            Total Numbers Correct Score: {guessData.userInputNumberData.totalNums}
+                            Total Locations Correct Score: {guessData.userInputNumberData.totalLocs}
                             Guess Attempt: {guessData.userInputNumberData.guessNumberCount}<br/>
                             You guessed {guessData.userInputNumberData.correctNumbers} correct numbers and {guessData.userInputNumberData.correctLocations} correct locations
                             <br/>

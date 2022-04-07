@@ -1,0 +1,8 @@
+.notLoggedIn {
+    background-color: #212121;
+    height: 80%;
+    width: 80%;
+    border: 4px solid green;
+    color: white;
+    font-size: xx-large;
+}
