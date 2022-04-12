@@ -3,6 +3,7 @@ import { FormLabel, FormControl } from '@chakra-ui/form-control';
 import {Input, InputGroup, InputRightElement} from '@chakra-ui/input';
 import {VStack} from '@chakra-ui/layout';
 import React, { useState } from 'react';
+import { Redirect } from "react-router-dom";
 import { useToast } from '@chakra-ui/react';
 import { useHistory } from 'react-router';
 import axios from "axios";
@@ -114,10 +115,9 @@ const Register = () => {
                 isClosable: true,
                 position: "bottom"
             });
-            localStorage.setItem("userInfo", JSON.stringify(data));
-
+            sessionStorage.setItem("userInfo", JSON.stringify(data));
             setLoading(false);
-            history.push('/')
+            history.push('/home')
         }
         catch (error ){
             toast({

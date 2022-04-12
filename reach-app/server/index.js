@@ -11,22 +11,22 @@ const {notFound, errorHandler} = require('./middleware/middleware');
 
 dotenv.config();
 connectDB();
+
+// 3rd party middlewares
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(cors());
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.send("endpoint is working!")
-})
-
+// application level middleware
+app.get('/', (req, res) => res.send("endpoint is working!"))
 app.use('/user', users);
 
+// error handling middleware
 app.use(notFound)
 app.use(errorHandler)
 
 const server = http.createServer(app);
-
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:3000",
@@ -38,7 +38,7 @@ let serverCounter;
 
 io.on("connection", (socket) => {
 
-    console.log(`User Connected: ${socket.id}`);
+  console.log(`User Connected: ${socket.id}`);
 
   socket.on("join_room", (data) => {
     serverCounter = 0;
@@ -55,10 +55,6 @@ io.on("connection", (socket) => {
       console.log("gameOver");
     }
   });
-
-  // socket.on("game_over", (string) => {
-  //   console.log(string);
-  // })
 
   socket.on("disconnect", () => {
     console.log("User Disconnected", socket.id);

@@ -9,15 +9,16 @@ import HintDisplay from "./HintDisplay";
 import UserData from "./UserData";
 import { Badge, Avatar, Box, Text, Flex } from '@chakra-ui/react';
 import { render } from "@testing-library/react";
+import { useHistory } from 'react-router';
 
 
 
 const GameFormEasy = (props) => {
     console.log(props.numbers);
-    let serverData = props.numbers
+    let serverData = props.numbers;
     const [userInputNumber, setUserInputNumber] = useState();
     const [guessAttemptCounter, setGuessAttemptCounter] = useState(0);
-    const [guessAttemptCounter2, setGuessAttemptCounter2] = useState(10);
+    const [guessAttemptCounter2, setGuessAttemptCounter2] = useState(2);
     const [guessArray, setGuessArray] = useState([]); 
     const [loading, setLoading] = useState(false);  
     const [showHistory, setShowHistory] = useState(() => () => console.log("hi"));
@@ -25,10 +26,19 @@ const GameFormEasy = (props) => {
     const [correctLocationCount, setCorrectLocationCount] = useState()
     const [correctNumbersCount, setCorrectNumbersCount] = useState()
     // const [hintIndex, setHintIndex] = useState(0);
-    // const [showHint, setShowHint] = useState(false);       
+    // const [showHint, setShowHint] = useState(false);   
+    const [wonGame, setWonGame] = useState(false);    
 
     // toast for error message objects
     const toast = useToast();
+    const history = useHistory();
+
+    const homeRedirect = () => {
+        // setUserInputNumber();
+        // setGuessAttemptCounter(0);
+        // setWonGame(false);
+        window.location.reload();
+    }
 
     const submitHandler = () => {
         setLoading(true);
@@ -49,6 +59,7 @@ const GameFormEasy = (props) => {
         if(userInputNumber.toString() === props.numbers) {
             console.log("yes");
             setLoading(false);
+            setWonGame(true);
         }
         else {
             // track # of guesses & limit # of guess attempts to 10
@@ -112,12 +123,14 @@ renderGuesses();
     const guessCounter = () => {
         setGuessAttemptCounter2(guessAttemptCounter2 - 1 );
         if(guessAttemptCounter2 === 0) {
-            window.location.reload();
+            alert("You Lost");
+            setTimeout(homeRedirect(), 4000);
         }
     };
     
    
     return (
+        !wonGame ? 
         <VStack spacing="5px" color="black">
              {/* <UserData counter={guessAttemptCounter2} /> */}
              <FormControl className="intInput" isRequired>
@@ -165,8 +178,22 @@ renderGuesses();
                 })}
             </div>
         </VStack>
+    :
+    <VStack>
+       <div>
+           {"You Won"}
+           <Button
+                colorScheme="blue"
+                width="100%"
+                style={{ marginTop: 15 }}
+                onClick={homeRedirect}
+                isLoading={loading}
+                >
+                Replay The Game
+            </Button>
+       </div>  
+    </VStack>
     )
-    
  }
 
 export default GameFormEasy;
